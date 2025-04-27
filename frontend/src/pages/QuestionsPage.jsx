@@ -1,54 +1,92 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
 import API from '../services/api';
 
-const QuestionsPage = () => {
-  const { roleId } = useParams();
+function QuestionsPage() {
   const [questions, setQuestions] = useState([]);
+  const [selectedRole, setSelectedRole] = useState(null);
 
   useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const response = await API.get(`questions/${roleId}/`);
-        setQuestions(response.data);
-      } catch (error) {
-        console.error('Error fetching questions:', error);
-      }
-    };
+    if (selectedRole) {
+      fetchQuestions();
+    }
+  }, [selectedRole]);
 
-    fetchQuestions();
-  }, [roleId]);
+  const fetchQuestions = async () => {
+    try {
+      const response = await API.get(`questions/${selectedRole}/`);
+      setQuestions(response.data);
+    } catch (error) {
+      console.error('Error fetching questions:', error);
+    }
+  };
 
   const handleProgressUpdate = async (questionId, status) => {
     try {
-      console.log("Sending to backend:", { user: 1, question: questionId, status });
-  
       await API.post('progress/', {
-        user: 1,
+        user: 1,   // default user for now
         question: questionId,
         status: status,
       });
-  
+
       alert(`Question ${status} successfully!`);
+
+      // 🔥 Update question status in UI immediately
+      const updatedQuestions = questions.map((q) => {
+        if (q.id === questionId) {
+          return { ...q, status: status };
+        }
+        return q;
+      });
+      setQuestions(updatedQuestions);
+
     } catch (error) {
       console.error('Error updating progress:', error.response?.data || error.message);
       alert('Failed to update progress.');
     }
   };
-  
-  
 
   return (
     <div>
-      <h1>Questions for Role ID: {roleId}</h1>
+      <h1>Available Questions</h1>
+
+      <div>
+        <label>Select a Role ID:</label>
+        <input
+          type="number"
+          min="1" 
+          value={selectedRole || ''}
+          onChange={(e) => setSelectedRole(e.target.value)}
+        />
+      </div>
+
       <ul>
         {questions.length > 0 ? (
           questions.map((q) => (
-            <li key={q.id}>
-              {q.text} - Difficulty: {q.difficulty}
+            <li key={q.id} style={{ marginBottom: '20px' }}>
               <div>
-                <button onClick={() => handleProgressUpdate(q.id, 'Bookmarked')}>Bookmark</button>
-                <button onClick={() => handleProgressUpdate(q.id, 'Completed')}>Mark Completed</button>
+                <strong>{q.text}</strong> — Difficulty: {q.difficulty}
+                {q.status && (
+                  <span style={{ marginLeft: '10px', color: q.status === 'Completed' ? 'green' : 'blue' }}>
+                    [{q.status}]
+                  </span>
+                )}
+              </div>
+
+              <div style={{ marginTop: '8px' }}>
+                <button
+                  onClick={() => handleProgressUpdate(q.id, 'Bookmarked')}
+                  disabled={q.status === 'Bookmarked'}
+                >
+                  Bookmark
+                </button>
+
+                <button
+                  onClick={() => handleProgressUpdate(q.id, 'Completed')}
+                  disabled={q.status === 'Completed'}
+                  style={{ marginLeft: '10px' }}
+                >
+                  Mark Completed
+                </button>
               </div>
             </li>
           ))
@@ -56,10 +94,8 @@ const QuestionsPage = () => {
           <p>No questions found for this role.</p>
         )}
       </ul>
-      <br />
-      <Link to="/">← Back to Roles</Link>
     </div>
   );
-};
+}
 
 export default QuestionsPage;

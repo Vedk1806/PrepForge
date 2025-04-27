@@ -19,11 +19,33 @@ class QuestionListView(generics.ListAPIView):
         role_id = self.kwargs['role_id']
         return Question.objects.filter(role_id=role_id)
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        user_id = request.GET.get('user', 1)  # defaulting to user=1 for now
+
+        results = []
+        for question in queryset:
+            try:
+                progress = UserProgress.objects.get(user_id=user_id, question=question)
+                status = progress.status
+            except UserProgress.DoesNotExist:
+                status = None
+
+            results.append({
+                'id': question.id,
+                'text': question.text,
+                'difficulty': question.difficulty,
+                'status': status,
+            })
+
+        return Response(results)
+
 # Manage User Progress (List/Create/Update/Delete)
 # class UserProgressListCreateView(generics.ListCreateAPIView):
 #     queryset = UserProgress.objects.all()
 #     serializer_class = UserProgressSerializer
-#     permission_classes = [permissions.IsAuthenticated]
+#     permission_classes = [permissions.IsAuthenticated] # this is commented, to use it after auth is made active.
+
 class UserProgressListCreateView(generics.ListCreateAPIView):
     queryset = UserProgress.objects.all()
     serializer_class = UserProgressSerializer
