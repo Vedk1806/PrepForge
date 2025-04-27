@@ -1,6 +1,8 @@
 from rest_framework import generics, permissions
 from .models import Role, Question, UserProgress, UserNote
 from .serializers import RoleSerializer, QuestionSerializer, UserProgressSerializer, UserNoteSerializer
+from rest_framework.response import Response
+
 
 # List all Roles
 class RoleListView(generics.ListAPIView):
@@ -18,10 +20,30 @@ class QuestionListView(generics.ListAPIView):
         return Question.objects.filter(role_id=role_id)
 
 # Manage User Progress (List/Create/Update/Delete)
+# class UserProgressListCreateView(generics.ListCreateAPIView):
+#     queryset = UserProgress.objects.all()
+#     serializer_class = UserProgressSerializer
+#     permission_classes = [permissions.IsAuthenticated]
 class UserProgressListCreateView(generics.ListCreateAPIView):
     queryset = UserProgress.objects.all()
     serializer_class = UserProgressSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = []  # AllowAny for now
+
+    def post(self, request, *args, **kwargs):
+        user = request.data.get('user')
+        question = request.data.get('question')
+        status_text = request.data.get('status')
+
+        try:
+            progress = UserProgress.objects.get(user=user, question=question)
+            # 🔥 If exists, update status
+            progress.status = status_text
+            progress.save()
+            return Response({'message': 'Progress updated successfully!'})
+        except UserProgress.DoesNotExist:
+            # 🔥 If does not exist, create new
+            return self.create(request, *args, **kwargs)
+
 
 class UserProgressDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = UserProgress.objects.all()

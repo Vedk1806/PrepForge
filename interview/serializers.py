@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import Role, Question, UserProgress, UserNote
+from django.contrib.auth.models import User
+
 
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -13,8 +15,16 @@ class QuestionSerializer(serializers.ModelSerializer):
         model = Question
         fields = '__all__'
 
+# class UserProgressSerializer(serializers.ModelSerializer):
+#     question = QuestionSerializer(read_only=True)  # Nested question details inside progress
+
+#     class Meta:
+#         model = UserProgress
+#         fields = '__all__'
+
 class UserProgressSerializer(serializers.ModelSerializer):
-    question = QuestionSerializer(read_only=True)  # Nested question details inside progress
+    question = serializers.PrimaryKeyRelatedField(queryset=Question.objects.all())
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
 
     class Meta:
         model = UserProgress
