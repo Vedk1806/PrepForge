@@ -36,17 +36,27 @@ function QuestionsPage() {
 
   const handleSaveNote = async (questionId, noteContent) => {
     try {
-      await API.post('notes/', {
-        user: 1, // temp user
-        question: questionId,
-        note: noteContent,
-      });
-      alert('Note saved successfully!');
+      // Step 1: Check if note exists
+      const response = await API.get(`notes/?question=${questionId}`);
+      if (response.data.length > 0) {
+        // 🔥 Note exists, update (PATCH)
+        const noteId = response.data[0].id;
+        await API.patch(`notes/${noteId}/`, { note: noteContent });
+        alert('Note updated successfully!');
+      } else {
+        // 🔥 Note does not exist, create new (POST)
+        await API.post('notes/', {
+          question: questionId,
+          note: noteContent,
+        });
+        alert('Note saved successfully!');
+      }
     } catch (error) {
       console.error('Error saving note:', error.response?.data || error.message);
       alert('Failed to save note.');
     }
   };
+  
 
   const fetchNotes = async () => {
     try {

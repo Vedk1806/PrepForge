@@ -2,6 +2,8 @@ from rest_framework import generics, permissions
 from .models import Role, Question, UserProgress, UserNote
 from .serializers import RoleSerializer, QuestionSerializer, UserProgressSerializer, UserNoteSerializer
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+
 
 
 # List all Roles
@@ -49,7 +51,7 @@ class QuestionListView(generics.ListAPIView):
 class UserProgressListCreateView(generics.ListCreateAPIView):
     queryset = UserProgress.objects.all()
     serializer_class = UserProgressSerializer
-    permission_classes = []  # AllowAny for now
+    permission_classes = [IsAuthenticated]  # AllowAny for now
 
     def post(self, request, *args, **kwargs):
         user = request.data.get('user')
@@ -65,20 +67,35 @@ class UserProgressListCreateView(generics.ListCreateAPIView):
         except UserProgress.DoesNotExist:
             # 🔥 If does not exist, create new
             return self.create(request, *args, **kwargs)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 
 class UserProgressDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = UserProgress.objects.all()
     serializer_class = UserProgressSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
 # Manage User Notes (List/Create/Update/Delete)
 class UserNoteListCreateView(generics.ListCreateAPIView):
     queryset = UserNote.objects.all()
     serializer_class = UserNoteSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        mutable_request_data = request.data.copy()
+        mutable_request_data['user'] = request.user.id  # 🔥 Inject the user ID into the validated data
+        serializer = self.get_serializer(data=mutable_request_data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=201)
+
 
 class UserNoteDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = UserNote.objects.all()
     serializer_class = UserNoteSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
