@@ -76,7 +76,7 @@ class UserProgressDetailView(generics.RetrieveUpdateDestroyAPIView):
 class UserNoteListCreateView(generics.ListCreateAPIView):
     queryset = UserNote.objects.all()
     serializer_class = UserNoteSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
 class UserNoteDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = UserNote.objects.all()

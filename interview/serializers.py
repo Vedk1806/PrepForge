@@ -31,7 +31,7 @@ class UserProgressSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class UserNoteSerializer(serializers.ModelSerializer):
-    question = QuestionSerializer(read_only=True)
+    question = serializers.PrimaryKeyRelatedField(queryset=Question.objects.all())  # FIXED!
 
     class Meta:
         model = UserNote
