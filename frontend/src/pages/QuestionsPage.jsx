@@ -36,18 +36,18 @@ function QuestionsPage() {
 
   const handleSaveNote = async (questionId, noteContent) => {
     try {
-      // Step 1: Check if note exists
+      // Step 1: Check if user's note exists
       const response = await API.get(`notes/?question=${questionId}`);
       if (response.data.length > 0) {
-        // 🔥 Note exists, update (PATCH)
+        // Note exists → Update
         const noteId = response.data[0].id;
         await API.patch(`notes/${noteId}/`, { note: noteContent });
         alert('Note updated successfully!');
       } else {
-        // 🔥 Note does not exist, create new (POST)
+        // Note does not exist → Create
         await API.post('notes/', {
           question: questionId,
-          note: noteContent,
+          note: noteContent,   // 👈 only question + note!
         });
         alert('Note saved successfully!');
       }
@@ -56,6 +56,11 @@ function QuestionsPage() {
       alert('Failed to save note.');
     }
   };
+  
+  
+  
+  
+  
   
 
   const fetchNotes = async () => {
@@ -72,14 +77,26 @@ function QuestionsPage() {
 
   const handleProgressUpdate = async (questionId, status) => {
     try {
-      await API.post('progress/', {
-        user: 1, // temp user
-        question: questionId,
-        status: status,
-      });
-
-      alert(`Question ${status} successfully!`);
-
+      const userId = localStorage.getItem('user_id');
+  
+      // 1. First check if a progress already exists
+      const response = await API.get(`progress/?question=${questionId}&user=${userId}`);
+      
+      if (response.data.length > 0) {
+        // 🔥 Progress exists, update
+        const progressId = response.data[0].id;
+        await API.patch(`progress/${progressId}/`, { status: status });
+        alert(`Progress updated to ${status}!`);
+      } else {
+        // 🔥 Progress does not exist, create new
+        await API.post('progress/', {
+          question: questionId,
+          status: status
+        });
+        alert(`Progress saved as ${status}!`);
+      }
+  
+      // Update frontend state after success
       const updatedQuestions = questions.map((q) => {
         if (q.id === questionId) {
           return { ...q, status: status };
@@ -87,12 +104,14 @@ function QuestionsPage() {
         return q;
       });
       setQuestions(updatedQuestions);
-
+  
     } catch (error) {
       console.error('Error updating progress:', error.response?.data || error.message);
       alert('Failed to update progress.');
     }
   };
+  
+  
 
   return (
     <div style={{

@@ -4,6 +4,11 @@ from .serializers import RoleSerializer, QuestionSerializer, UserProgressSeriali
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from django.contrib.auth.models import User
+from rest_framework import status
+
 
 
 # List all Roles
@@ -42,12 +47,6 @@ class QuestionListView(generics.ListAPIView):
 
         return Response(results)
 
-# Manage User Progress (List/Create/Update/Delete)
-# class UserProgressListCreateView(generics.ListCreateAPIView):
-#     queryset = UserProgress.objects.all()
-#     serializer_class = UserProgressSerializer
-#     permission_classes = [permissions.IsAuthenticated] # this is commented, to use it after auth is made active.
-
 class UserProgressListCreateView(generics.ListCreateAPIView):
     queryset = UserProgress.objects.all()
     serializer_class = UserProgressSerializer
@@ -79,23 +78,58 @@ class UserProgressDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 # Manage User Notes (List/Create/Update/Delete)
 class UserNoteListCreateView(generics.ListCreateAPIView):
-    queryset = UserNote.objects.all()
     serializer_class = UserNoteSerializer
     permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    def get_queryset(self):
+        question_id = self.request.query_params.get('question')
+        user = self.request.user
+        if question_id:
+            return UserNote.objects.filter(user=user, question_id=question_id)
+        return UserNote.objects.filter(user=user)
 
-    def create(self, request, *args, **kwargs):
-        mutable_request_data = request.data.copy()
-        mutable_request_data['user'] = request.user.id  # 🔥 Inject the user ID into the validated data
-        serializer = self.get_serializer(data=mutable_request_data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(serializer.data, status=201)
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)  # 🔥 Automatically assign user
+
+
+# class UserProgressListCreateView(generics.ListCreateAPIView):
+#     queryset = UserProgress.objects.all()
+#     serializer_class = UserProgressSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+#         question_id = self.request.query_params.get('question')
+#         user = self.request.user
+#         if question_id:
+#             return UserProgress.objects.filter(user=user, question_id=question_id)
+#         return UserProgress.objects.filter(user=user)
+
+#     def perform_create(self, serializer):
+#         serializer.save(user=self.request.user)
+
 
 
 class UserNoteDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = UserNote.objects.all()
     serializer_class = UserNoteSerializer
     permission_classes = [IsAuthenticated]
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register_user(request):
+    username = request.data.get('username')
+    email = request.data.get('email')
+    password1 = request.data.get('password1')
+    password2 = request.data.get('password2')
+
+    if password1 != password2:
+        return Response({'error': 'Passwords do not match.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if User.objects.filter(username=username).exists():
+        return Response({'error': 'Username already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    user = User.objects.create_user(username=username, email=email, password=password1)
+    user.save()
+
+    return Response({'message': 'User registered successfully!'}, status=status.HTTP_201_CREATED)

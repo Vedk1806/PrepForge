@@ -24,19 +24,26 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 class UserProgressSerializer(serializers.ModelSerializer):
     question = serializers.PrimaryKeyRelatedField(queryset=Question.objects.all())
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    user = serializers.ReadOnlyField(source='user.id')  # 🔥 ADD THIS LINE
 
     class Meta:
         model = UserProgress
         fields = '__all__'
-        extra_kwargs = {'user': {'required': False}}  # This line tells: "user is not required from frontend"
 
 
+
+
+# class UserNoteSerializer(serializers.ModelSerializer):
+#     question = serializers.PrimaryKeyRelatedField(queryset=Question.objects.all())  # FIXED!
+
+#     class Meta:
+#         model = UserNote
+#         fields = '__all__'
+#         extra_kwargs = {'user': {'required': False}}  # This line tells: "user is not required from frontend"
 
 class UserNoteSerializer(serializers.ModelSerializer):
-    question = serializers.PrimaryKeyRelatedField(queryset=Question.objects.all())  # FIXED!
+    user = serializers.ReadOnlyField(source='user.id')  # 🔥 THIS LINE IS THE MISSING PIECE!
 
     class Meta:
         model = UserNote
         fields = '__all__'
-        extra_kwargs = {'user': {'required': False}}  # This line tells: "user is not required from frontend"

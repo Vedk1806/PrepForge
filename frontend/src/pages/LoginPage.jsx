@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import API from '../services/api';  // your axios instance
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode'; 
+
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -15,11 +17,16 @@ function LoginPage() {
         username,
         password,
       });
-
+  
       const { access } = response.data;
       
-      localStorage.setItem('accessToken', access); // Save token 🔥
-
+      localStorage.setItem('accessToken', access); // Save access token
+  
+      // 🔥 Decode JWT to get user ID
+      const decoded = jwtDecode(access);
+      console.log('Decoded JWT:', decoded); // optional, just to see
+      localStorage.setItem('user_id', decoded.user_id); // Save user_id separately
+  
       alert('Login Successful! 🚀');
       navigate('/'); // Redirect to Home / Questions Page
     } catch (error) {
