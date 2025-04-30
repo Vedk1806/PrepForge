@@ -1,24 +1,23 @@
 import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import API from '../services/api';
 
 function QuestionsPage() {
+  const { roleId } = useParams();
   const [questions, setQuestions] = useState([]);
-  const [selectedRole, setSelectedRole] = useState('');
 
   useEffect(() => {
-    if (selectedRole) {
-      fetchQuestions();
+    if (roleId) {
+      fetchQuestions(roleId);
     }
-  }, [selectedRole]);
+  }, [roleId]);
 
-  const fetchQuestions = async () => {
+  const fetchQuestions = async (selectedRole) => {
     try {
       const response = await API.get(`questions/${selectedRole}/`);
       const questionsData = response.data;
-  
-      const notes = await fetchNotes();  // 🔥 Fetch notes
-  
-      // Merge notes into questions
+      const notes = await fetchNotes();
+
       const questionsWithNotes = questionsData.map((q) => {
         const noteObj = notes.find((n) => n.question === q.id);
         return {
@@ -26,28 +25,24 @@ function QuestionsPage() {
           note: noteObj ? noteObj.note : '',
         };
       });
-  
+
       setQuestions(questionsWithNotes);
     } catch (error) {
       console.error('Error fetching questions:', error);
     }
   };
-  
 
   const handleSaveNote = async (questionId, noteContent) => {
     try {
-      // Step 1: Check if user's note exists
       const response = await API.get(`notes/?question=${questionId}`);
       if (response.data.length > 0) {
-        // Note exists → Update
         const noteId = response.data[0].id;
         await API.patch(`notes/${noteId}/`, { note: noteContent });
         alert('Note updated successfully!');
       } else {
-        // Note does not exist → Create
         await API.post('notes/', {
           question: questionId,
-          note: noteContent,   // 👈 only question + note!
+          note: noteContent,
         });
         alert('Note saved successfully!');
       }
@@ -56,47 +51,34 @@ function QuestionsPage() {
       alert('Failed to save note.');
     }
   };
-  
-  
-  
-  
-  
-  
 
   const fetchNotes = async () => {
     try {
-      const response = await API.get('notes/');  // Fetch all notes
-      return response.data;  // Array of {id, user, question, note}
+      const response = await API.get('notes/');
+      return response.data;
     } catch (error) {
       console.error('Error fetching notes:', error);
       return [];
     }
   };
-  
-  
 
   const handleProgressUpdate = async (questionId, status) => {
     try {
       const userId = localStorage.getItem('user_id');
-  
-      // 1. First check if a progress already exists
       const response = await API.get(`progress/?question=${questionId}&user=${userId}`);
-      
+
       if (response.data.length > 0) {
-        // 🔥 Progress exists, update
         const progressId = response.data[0].id;
         await API.patch(`progress/${progressId}/`, { status: status });
         alert(`Progress updated to ${status}!`);
       } else {
-        // 🔥 Progress does not exist, create new
         await API.post('progress/', {
           question: questionId,
           status: status
         });
         alert(`Progress saved as ${status}!`);
       }
-  
-      // Update frontend state after success
+
       const updatedQuestions = questions.map((q) => {
         if (q.id === questionId) {
           return { ...q, status: status };
@@ -104,38 +86,26 @@ function QuestionsPage() {
         return q;
       });
       setQuestions(updatedQuestions);
-  
+
     } catch (error) {
       console.error('Error updating progress:', error.response?.data || error.message);
       alert('Failed to update progress.');
     }
   };
-  
-  
 
   return (
     <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',      // horizontally center
-        justifyContent: 'center',  // vertically center
-        minHeight: '100vh',        // full screen height
-        padding: '20px'
-      }}>
-      
-      
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100vh',
+      padding: '20px',
+      maxWidth: '900px',
+      margin: '0 auto',
+      width: '100%'
+    }}>
       <h1>Available Questions</h1>
-
-      <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-        <label style={{ marginRight: '10px' }}>Select a Role ID:</label>
-        <input
-          type="number"
-          min="1"
-          value={selectedRole}
-          onChange={(e) => setSelectedRole(e.target.value)}
-          style={{ padding: '5px', width: '100px' }}
-        />
-      </div>
 
       <ul style={{
         listStyle: 'none',
@@ -208,45 +178,44 @@ function QuestionsPage() {
                 >
                   Mark Completed
                 </button>
-            </div>
+              </div>
 
               <div style={{ marginTop: '10px' }}>
                 <textarea
-                placeholder="Write your notes here..."
-                value={q.note || ""}
-                onChange={(e) => {
+                  placeholder="Write your notes here..."
+                  value={q.note || ""}
+                  onChange={(e) => {
                     const updatedQuestions = questions.map((item) => {
-                    if (item.id === q.id) {
+                      if (item.id === q.id) {
                         return { ...item, note: e.target.value };
-                    }
-                    return item;
+                      }
+                      return item;
                     });
                     setQuestions(updatedQuestions);
-                }}
-                style={{
+                  }}
+                  style={{
                     width: '100%',
                     padding: '8px',
                     marginBottom: '8px',
                     borderRadius: '4px',
                     border: '1px solid #ccc'
-                }}
+                  }}
                 />
 
                 <button
-                onClick={() => handleSaveNote(q.id, q.note)}
-                style={{
+                  onClick={() => handleSaveNote(q.id, q.note)}
+                  style={{
                     padding: '5px 10px',
                     backgroundColor: '#6c63ff',
                     color: 'white',
                     border: 'none',
                     borderRadius: '4px',
                     cursor: 'pointer'
-                }}
+                  }}
                 >
-                Save Note
+                  Save Note
                 </button>
-            </div>
-
+              </div>
             </li>
           ))
         ) : (
