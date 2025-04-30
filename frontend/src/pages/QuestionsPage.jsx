@@ -95,11 +95,10 @@ function QuestionsPage() {
 
   return (
     <div style={{
+      flexGrow: 1,
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
       padding: '20px',
       maxWidth: '900px',
       margin: '0 auto',

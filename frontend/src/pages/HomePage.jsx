@@ -101,7 +101,7 @@ function HomePage() {
 
   return (
     <div style={{
-      height: '100vh',
+    //   height: '100vh',
       display: 'flex',
       flexDirection: 'column',
       backgroundColor: '#1e1e1e',
