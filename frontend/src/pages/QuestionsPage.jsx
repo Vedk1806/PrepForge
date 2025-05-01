@@ -1,3 +1,5 @@
+// Updated QuestionsPage.jsx with pagination (3 questions per page)
+
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import API from '../services/api';
@@ -5,6 +7,8 @@ import API from '../services/api';
 function QuestionsPage() {
   const { roleId } = useParams();
   const [questions, setQuestions] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const questionsPerPage = 3;
 
   useEffect(() => {
     if (roleId) {
@@ -40,14 +44,11 @@ function QuestionsPage() {
         await API.patch(`notes/${noteId}/`, { note: noteContent });
         alert('Note updated successfully!');
       } else {
-        await API.post('notes/', {
-          question: questionId,
-          note: noteContent,
-        });
+        await API.post('notes/', { question: questionId, note: noteContent });
         alert('Note saved successfully!');
       }
     } catch (error) {
-      console.error('Error saving note:', error.response?.data || error.message);
+      console.error('Error saving note:', error);
       alert('Failed to save note.');
     }
   };
@@ -69,158 +70,97 @@ function QuestionsPage() {
 
       if (response.data.length > 0) {
         const progressId = response.data[0].id;
-        await API.patch(`progress/${progressId}/`, { status: status });
-        alert(`Progress updated to ${status}!`);
+        await API.patch(`progress/${progressId}/`, { status });
       } else {
-        await API.post('progress/', {
-          question: questionId,
-          status: status
-        });
-        alert(`Progress saved as ${status}!`);
+        await API.post('progress/', { question: questionId, status });
       }
 
-      const updatedQuestions = questions.map((q) => {
-        if (q.id === questionId) {
-          return { ...q, status: status };
-        }
-        return q;
-      });
+      const updatedQuestions = questions.map((q) =>
+        q.id === questionId ? { ...q, status } : q
+      );
       setQuestions(updatedQuestions);
-
     } catch (error) {
-      console.error('Error updating progress:', error.response?.data || error.message);
+      console.error('Error updating progress:', error);
       alert('Failed to update progress.');
     }
   };
 
+  const indexOfLast = currentPage * questionsPerPage;
+  const indexOfFirst = indexOfLast - questionsPerPage;
+  const currentQuestions = questions.slice(indexOfFirst, indexOfLast);
+  const totalPages = Math.ceil(questions.length / questionsPerPage);
+
   return (
     <div style={{
-      flexGrow: 1,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      padding: '20px',
-      maxWidth: '900px',
-      margin: '0 auto',
-      width: '100%'
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      padding: '20px', maxWidth: '900px', margin: '0 auto', width: '100%'
     }}>
       <h1>Available Questions</h1>
 
-      <ul style={{
-        listStyle: 'none',
-        padding: 0,
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center'
-      }}>
-        {questions.length > 0 ? (
-          questions.map((q) => (
-            <li key={q.id} style={{
-              border: '1px solid #ddd',
-              borderRadius: '8px',
-              padding: '15px',
-              marginBottom: '15px',
-              backgroundColor: '#f9f9f9',
-              width: '70%',
-              color: '#212121'
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}>
-                <div>
-                  <strong>{q.text}</strong> — Difficulty: {q.difficulty}
-                </div>
-                {q.status && (
-                  <span style={{
-                    padding: '4px 10px',
-                    borderRadius: '20px',
-                    backgroundColor: q.status === 'Completed' ? '#d4edda' : '#cce5ff',
-                    color: q.status === 'Completed' ? '#155724' : '#004085',
-                    fontSize: '12px',
-                  }}>
-                    {q.status}
-                  </span>
+      <ul style={{ listStyle: 'none', padding: 0, width: '100%' }}>
+        {currentQuestions.map((q) => (
+          <li key={q.id} style={{
+            border: '1px solid #ddd', borderRadius: '8px', padding: '15px', marginBottom: '15px',
+            backgroundColor: '#f9f9f9', color: '#212121'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <strong>{q.text}</strong>
+              {q.status && (
+                <span style={{
+                  padding: '4px 10px', borderRadius: '20px',
+                  backgroundColor: q.status === 'Completed' ? '#d4edda' : '#cce5ff',
+                  color: q.status === 'Completed' ? '#155724' : '#004085', fontSize: '12px'
+                }}>{q.status}</span>
+              )}
+            </div>
+
+            <div style={{ marginTop: '10px' }}>
+              <button onClick={() => handleProgressUpdate(q.id, 'Bookmarked')} style={{
+                padding: '5px 10px', marginRight: '10px',
+                backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px'
+              }}>Bookmark</button>
+              <button onClick={() => handleProgressUpdate(q.id, 'Completed')} style={{
+                padding: '5px 10px', backgroundColor: '#28a745', color: 'white',
+                border: 'none', borderRadius: '4px'
+              }}>Mark Completed</button>
+            </div>
+
+            <div style={{ marginTop: '10px' }}>
+              <textarea
+                placeholder="Write your notes here..."
+                value={q.note || ""}
+                onChange={(e) => setQuestions(prev =>
+                  prev.map(item => item.id === q.id ? { ...item, note: e.target.value } : item)
                 )}
-              </div>
-
-              <div style={{ marginTop: '10px' }}>
-                <button
-                  onClick={() => handleProgressUpdate(q.id, 'Bookmarked')}
-                  disabled={q.status === 'Bookmarked'}
-                  style={{
-                    padding: '5px 10px',
-                    marginRight: '10px',
-                    backgroundColor: q.status === 'Bookmarked' ? '#ccc' : '#007bff',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: q.status === 'Bookmarked' ? 'not-allowed' : 'pointer'
-                  }}
-                >
-                  Bookmark
-                </button>
-
-                <button
-                  onClick={() => handleProgressUpdate(q.id, 'Completed')}
-                  disabled={q.status === 'Completed'}
-                  style={{
-                    padding: '5px 10px',
-                    backgroundColor: q.status === 'Completed' ? '#ccc' : '#28a745',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: q.status === 'Completed' ? 'not-allowed' : 'pointer'
-                  }}
-                >
-                  Mark Completed
-                </button>
-              </div>
-
-              <div style={{ marginTop: '10px' }}>
-                <textarea
-                  placeholder="Write your notes here..."
-                  value={q.note || ""}
-                  onChange={(e) => {
-                    const updatedQuestions = questions.map((item) => {
-                      if (item.id === q.id) {
-                        return { ...item, note: e.target.value };
-                      }
-                      return item;
-                    });
-                    setQuestions(updatedQuestions);
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    marginBottom: '8px',
-                    borderRadius: '4px',
-                    border: '1px solid #ccc'
-                  }}
-                />
-
-                <button
-                  onClick={() => handleSaveNote(q.id, q.note)}
-                  style={{
-                    padding: '5px 10px',
-                    backgroundColor: '#6c63ff',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Save Note
-                </button>
-              </div>
-            </li>
-          ))
-        ) : (
-          <p>No questions found for this role.</p>
-        )}
+                style={{ width: '100%', padding: '8px', marginBottom: '8px' }}
+              />
+              <button onClick={() => handleSaveNote(q.id, q.note)} style={{
+                padding: '5px 10px', backgroundColor: '#6c63ff', color: 'white',
+                border: 'none', borderRadius: '4px'
+              }}>Save Note</button>
+            </div>
+          </li>
+        ))}
       </ul>
+
+      {/* Pagination Controls */}
+      <div style={{ marginTop: '20px' }}>
+        <button
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage(prev => prev - 1)}
+          style={{ marginRight: '10px' }}
+        >
+          Previous
+        </button>
+        <span>Page {currentPage} of {totalPages}</span>
+        <button
+          disabled={currentPage === totalPages}
+          onClick={() => setCurrentPage(prev => prev + 1)}
+          style={{ marginLeft: '10px' }}
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 }

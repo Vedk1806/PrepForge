@@ -1,85 +1,7 @@
-// import React, { useEffect, useState } from 'react';
-// import { Link } from 'react-router-dom';
-// import API from '../services/api';
-
-// function HomePage() {
-//   const [roles, setRoles] = useState([]);
-
-//   useEffect(() => {
-//     const fetchRoles = async () => {
-//       try {
-//         const response = await API.get('roles/');
-//         setRoles(response.data);
-//       } catch (error) {
-//         console.error('Error fetching roles:', error);
-//       }
-//     };
-
-//     fetchRoles();
-//   }, []);
-
-//   return (
-//     <div style={{
-//       height: '100vh', // Ensures the container fits the viewport
-//       display: 'flex',
-//       flexDirection: 'column',
-//       backgroundColor: '#1e1e1e',
-//       color: 'white'
-//     }}>
-//       <div style={{
-//         flexGrow: 1,
-//         display: 'flex',
-//         justifyContent: 'center',
-//         alignItems: 'center',
-//         padding: 0, // Remove padding to avoid overflow
-//         height: '100%' // Ensure this fills the parent
-//       }}>
-//         <div style={{
-//           width: '100%',
-//           maxWidth: '800px',
-//           textAlign: 'center'
-//         }}>
-//           <h1 style={{ fontSize: '2.5rem', marginBottom: '20px' }}>
-//             Welcome to PrepForge
-//           </h1>
-//           <h2 style={{ marginBottom: '20px' }}>Available Roles</h2>
-//           {/* <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-//             {roles.map((role) => (
-//               <li key={role.id} style={{ margin: '10px 0' }}>
-//                 <Link to={`/questions/${role.id}`} style={{ textDecoration: 'none', color: '#6c63ff' }}>
-//                   {role.name}
-//                 </Link>
-//               </li>
-//             ))}
-//           </ul> */}
-//           <select
-//             onChange={(e) => {
-//             const selectedRoleId = e.target.value;
-//             if (selectedRoleId) navigate(`/questions/${selectedRoleId}`);
-//             }}
-//                 defaultValue=""
-//                  style={{ padding: '10px', borderRadius: '5px' }}
-//          >
-//         <option value="" disabled>Select a Role</option>
-//         {roles.map((role) => (
-//             <option key={role.id} value={role.id}>
-//             {role.name}
-//             </option>
-//         ))}
-//         </select>
-
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default HomePage;
-
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
+import { motion } from 'framer-motion'; // ✅ Add this
 
 function HomePage() {
   const [roles, setRoles] = useState([]);
@@ -100,46 +22,81 @@ function HomePage() {
   }, []);
 
   return (
-    <div style={{
-    //   height: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      backgroundColor: '#1e1e1e',
-      color: 'white'
-    }}>
-      <div style={{
-        flexGrow: 1,
+    <div
+      style={{
+        // height: '100vh',
         display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 0,
-        height: '100%'
-      }}>
-        <div style={{
-          width: '100%',
-          maxWidth: '800px',
-          textAlign: 'center'
-        }}>
-          <h1 style={{ fontSize: '2.5rem', marginBottom: '20px' }}>
+        flexDirection: 'column',
+        backgroundColor: '#1e1e1e',
+        color: 'white',
+      }}
+    >
+      <div
+        style={{
+          flexGrow: 1,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100%',
+        }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          style={{
+            width: '100%',
+            maxWidth: '800px',
+            textAlign: 'center',
+          }}
+        >
+          <motion.h1
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            style={{ fontSize: '2.5rem', marginBottom: '20px' }}
+          >
             Welcome to PrepForge
-          </h1>
-          <h2 style={{ marginBottom: '20px' }}>Available Roles</h2>
+          </motion.h1>
 
-          <select
+          <motion.h2
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            style={{ marginBottom: '20px' }}
+          >
+            Available Roles
+          </motion.h2>
+
+          <motion.select
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
             onChange={(e) => setSelectedRole(e.target.value)}
             value={selectedRole}
-            style={{ padding: '10px', borderRadius: '5px', marginBottom: '15px', minWidth: '200px' }}
+            style={{
+              padding: '10px',
+              borderRadius: '5px',
+              marginBottom: '15px',
+              minWidth: '200px',
+            }}
           >
-            <option value="" disabled>Select a Role</option>
+            <option value="" disabled>
+              Select a Role
+            </option>
             {roles.map((role) => (
               <option key={role.id} value={role.id}>
                 {role.name}
               </option>
             ))}
-          </select>
+          </motion.select>
 
           {selectedRole && (
-            <div>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.7 }}
+            >
               <button
                 onClick={() => navigate(`/questions/${selectedRole}`)}
                 style={{
@@ -148,15 +105,14 @@ function HomePage() {
                   color: 'white',
                   border: 'none',
                   borderRadius: '5px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
                 }}
               >
                 Proceed
               </button>
-            </div>
+            </motion.div>
           )}
-
-        </div>
+        </motion.div>
       </div>
     </div>
   );

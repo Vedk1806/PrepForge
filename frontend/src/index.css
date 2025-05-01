@@ -78,3 +78,32 @@ html, body, #root {
   padding: 0;
   overflow-x: hidden;
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.homepage-heading {
+  animation: fadeIn 1s ease-in-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.role-dropdown {
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  min-width: 200px;
+
+  animation: fadeInUp 0.8s ease-out forwards;
+}
