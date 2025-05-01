@@ -26,6 +26,7 @@ function LoginPage() {
   };
 
   return (
+
     <div style={{
       display: 'flex',
       flexDirection: 'column',
@@ -33,6 +34,11 @@ function LoginPage() {
       backgroundColor: '#1e1e1e',
       marginTop: '250px'
     }}>
+            <img src="/coder.svg" alt="logo" style={{ width: '200px', height: '200px', marginLeft:'750px', marginTop:'-200px', marginBottom:'50px' }} />
+
+    <h2 style={{ textAlign: 'center', color: '#aaa', marginTop: '-10px', marginBottom:'50px' }}>
+    Your personal coding prep space — smart, focused, and tailored to your role.
+    </h2>
       <div style={{
         flexGrow: 1,
         display: 'flex',
@@ -48,6 +54,8 @@ function LoginPage() {
           borderRadius: '8px',
           boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
         }}>
+
+
           <h2 style={{ textAlign: 'center', color: 'white', marginBottom: '20px' }}>Login to PrepForge</h2>
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column' }}>
             <input

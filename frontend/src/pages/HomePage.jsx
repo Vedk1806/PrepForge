@@ -54,10 +54,12 @@ function HomePage() {
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.6 }}
-            style={{ fontSize: '2.5rem', marginBottom: '20px' }}
+            style={{ fontSize: '2.5rem', marginBottom: '20px', marginTop:'100px', marginBottom: '150px' }}
           >
             Welcome to PrepForge
           </motion.h1>
+
+          <img src="/welcome2.svg" alt="logo" style={{ width: '150px', height: '150px', marginTop:'-80px', marginBottom:'50px' }} />
 
           <motion.h2
             initial={{ opacity: 0, y: -10 }}

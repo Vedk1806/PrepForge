@@ -25,11 +25,16 @@ function Navbar() {
       }}
     >
       {/* Left: Logo */}
-      <div style={{ fontSize: '20px', fontWeight: 'bold' }}>
-        <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>
-          PrepForge
-        </Link>
-      </div>
+     {/* Left: Logo */}
+<div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+  <Link to="/" style={{ color: 'white', textDecoration: 'none', fontSize: '20px', fontWeight: 'bold' }}>
+    PrepForge
+  </Link>
+</div>
+
+
+      
+
 
       {/* Right: Nav Links */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
