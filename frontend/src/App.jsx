@@ -4,6 +4,7 @@ import HomePage from './pages/HomePage';
 import QuestionsPage from './pages/QuestionsPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import DashboardPage from './pages/DashboardPage'; // ✅ Import the Dashboard
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
@@ -29,6 +30,7 @@ function App() {
             <Route path="/questions/:roleId" element={<QuestionsPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} /> {/* ✅ Dashboard route */}
           </Routes>
         </div>
         <Footer />

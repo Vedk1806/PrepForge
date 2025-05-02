@@ -54,7 +54,7 @@ function HomePage() {
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.6 }}
-            style={{ fontSize: '2.5rem', marginBottom: '20px', marginTop:'100px', marginBottom: '150px' }}
+            style={{ fontSize: '2.5rem', marginTop:'100px', marginBottom: '150px' }}
           >
             Welcome to PrepForge
           </motion.h1>

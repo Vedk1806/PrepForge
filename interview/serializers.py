@@ -22,14 +22,28 @@ class QuestionSerializer(serializers.ModelSerializer):
 #         model = UserProgress
 #         fields = '__all__'
 
+
+# class UserProgressSerializer(serializers.ModelSerializer):
+#     question = serializers.PrimaryKeyRelatedField(queryset=Question.objects.all())
+#     user = serializers.ReadOnlyField(source='user.id')
+
+#     class Meta:
+#         model = UserProgress
+#         fields = '__all__'
+
 class UserProgressSerializer(serializers.ModelSerializer):
     question = serializers.PrimaryKeyRelatedField(queryset=Question.objects.all())
-    user = serializers.ReadOnlyField(source='user.id')  # 🔥 ADD THIS LINE
+    user = serializers.IntegerField(source='user.id', read_only=True)
 
     class Meta:
         model = UserProgress
         fields = '__all__'
 
+    def to_representation(self, instance):
+        # Return full question details on GET
+        data = super().to_representation(instance)
+        data['question'] = QuestionSerializer(instance.question).data
+        return data
 
 
 

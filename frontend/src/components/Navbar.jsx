@@ -25,16 +25,11 @@ function Navbar() {
       }}
     >
       {/* Left: Logo */}
-     {/* Left: Logo */}
-<div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-  <Link to="/" style={{ color: 'white', textDecoration: 'none', fontSize: '20px', fontWeight: 'bold' }}>
-    PrepForge
-  </Link>
-</div>
-
-
-      
-
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <Link to="/" style={{ color: 'white', textDecoration: 'none', fontSize: '20px', fontWeight: 'bold' }}>
+          PrepForge
+        </Link>
+      </div>
 
       {/* Right: Nav Links */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -43,6 +38,11 @@ function Navbar() {
             <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>
               Home
             </Link>
+
+            <Link to="/dashboard" style={{ color: 'white', textDecoration: 'none' }}>
+              Dashboard
+            </Link>
+
             <button
               onClick={handleLogout}
               style={{

@@ -28,7 +28,11 @@ class QuestionListView(generics.ListAPIView):
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        user_id = request.GET.get('user', 1)  # defaulting to user=1 for now
+        # user_id = request.GET.get('user', 1)  # defaulting to user=1 for now
+        user_id = request.GET.get('user')
+        if not user_id:
+            return Response({'error': 'User ID is required'}, status=400)
+
 
         results = []
         for question in queryset:
@@ -48,27 +52,30 @@ class QuestionListView(generics.ListAPIView):
         return Response(results)
 
 class UserProgressListCreateView(generics.ListCreateAPIView):
-    queryset = UserProgress.objects.all()
     serializer_class = UserProgressSerializer
-    permission_classes = [IsAuthenticated]  # AllowAny for now
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return UserProgress.objects.filter(user=self.request.user)
 
     def post(self, request, *args, **kwargs):
-        user = request.data.get('user')
-        question = request.data.get('question')
+        question_id = request.data.get('question')
         status_text = request.data.get('status')
+        user = request.user  # 🔐 Authenticated user from token
 
         try:
-            progress = UserProgress.objects.get(user=user, question=question)
-            # 🔥 If exists, update status
+            progress = UserProgress.objects.get(user=user, question_id=question_id)
             progress.status = status_text
             progress.save()
             return Response({'message': 'Progress updated successfully!'})
         except UserProgress.DoesNotExist:
-            # 🔥 If does not exist, create new
-            return self.create(request, *args, **kwargs)
-    
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+            # 🔁 Instead of using self.create() which uses request.data,
+            # call perform_create() directly with safe user assignment
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user=user)
+            return Response({'message': 'Progress created successfully!'})
+
 
 
 class UserProgressDetailView(generics.RetrieveUpdateDestroyAPIView):

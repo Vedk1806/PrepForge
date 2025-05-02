@@ -34,7 +34,19 @@ function LoginPage() {
       backgroundColor: '#1e1e1e',
       marginTop: '250px'
     }}>
-            <img src="/coder.svg" alt="logo" style={{ width: '200px', height: '200px', marginLeft:'750px', marginTop:'-200px', marginBottom:'50px' }} />
+    <img
+    src="/coder.svg"
+    alt="logo"
+    style={{
+        width: '200px',
+        height: '200px',
+        margin: '0 auto 50px',
+        display: 'block',
+        position: 'relative',
+        top: '-150px',
+        marginBottom: '-100px'
+    }}
+    />
 
     <h2 style={{ textAlign: 'center', color: '#aaa', marginTop: '-10px', marginBottom:'50px' }}>
     Your personal coding prep space — smart, focused, and tailored to your role.
