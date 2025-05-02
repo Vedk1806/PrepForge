@@ -1,4 +1,4 @@
-// Updated QuestionsPage.jsx with correct progress loading and status rendering
+// Updated QuestionsPage.jsx with 3-question pagination
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -7,6 +7,22 @@ import API from '../services/api';
 function QuestionsPage() {
   const { roleId } = useParams();
   const [questions, setQuestions] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const questionsPerPage = 3;
+
+  const indexOfLast = currentPage * questionsPerPage;
+  const indexOfFirst = indexOfLast - questionsPerPage;
+  const currentQuestions = questions.slice(indexOfFirst, indexOfLast);
+
+  const totalPages = Math.ceil(questions.length / questionsPerPage);
+
+  const goToNext = () => {
+    if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
+  };
+
+  const goToPrevious = () => {
+    if (currentPage > 1) setCurrentPage(prev => prev - 1);
+  };
 
   useEffect(() => {
     if (roleId) {
@@ -21,7 +37,7 @@ function QuestionsPage() {
       const notesRes = await API.get('notes/');
       const questionsData = response.data;
       const notes = notesRes.data;
-  
+
       const questionsWithExtras = questionsData.map((q) => {
         const noteObj = notes.find((n) => n.question === q.id);
         return {
@@ -29,13 +45,12 @@ function QuestionsPage() {
           note: noteObj?.note || '',
         };
       });
-  
+
       setQuestions(questionsWithExtras);
     } catch (error) {
       console.error('Error fetching questions:', error);
     }
   };
-  
 
   const handleSaveNote = async (questionId, noteContent) => {
     try {
@@ -108,7 +123,7 @@ function QuestionsPage() {
       <h1>Available Questions</h1>
 
       <ul style={{ listStyle: 'none', padding: 0, width: '100%' }}>
-        {questions.map((q) => (
+        {currentQuestions.map((q) => (
           <li
             key={q.id}
             style={{
@@ -199,6 +214,19 @@ function QuestionsPage() {
           </li>
         ))}
       </ul>
+
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '20px' }}>
+        <button onClick={goToPrevious} disabled={currentPage === 1}>
+          Previous
+        </button>
+        <span style={{ color: '#ffffff', fontWeight: 'bold', fontSize: '16px' }}>
+          Page {currentPage} of {totalPages}
+        </span>
+
+        <button onClick={goToNext} disabled={currentPage === totalPages}>
+          Next
+        </button>
+      </div>
     </div>
   );
 }
