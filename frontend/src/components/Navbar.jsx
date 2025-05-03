@@ -19,7 +19,7 @@ function Navbar() {
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '12px 24px',
-        backgroundColor: 'green',
+        backgroundColor: '#6c63ff',
         color: 'white',
         flexWrap: 'wrap',
       }}
