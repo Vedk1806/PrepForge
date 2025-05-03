@@ -1,27 +1,30 @@
-// Updated QuestionsPage.jsx with 3-question pagination
+// QuestionsPage.jsx — supports jumping to a specific question and optional highlight
 
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import API from '../services/api';
 
 function QuestionsPage() {
   const { roleId } = useParams();
+  const location = useLocation();
+  const targetQuestionId = location.state?.targetQuestionId;
+
   const [questions, setQuestions] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const questionsPerPage = 3;
+  const [highlightedId, setHighlightedId] = useState(null);
 
+  const questionsPerPage = 3;
   const indexOfLast = currentPage * questionsPerPage;
   const indexOfFirst = indexOfLast - questionsPerPage;
   const currentQuestions = questions.slice(indexOfFirst, indexOfLast);
-
   const totalPages = Math.ceil(questions.length / questionsPerPage);
 
   const goToNext = () => {
-    if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
   };
 
   const goToPrevious = () => {
-    if (currentPage > 1) setCurrentPage(prev => prev - 1);
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
   };
 
   useEffect(() => {
@@ -29,6 +32,24 @@ function QuestionsPage() {
       fetchQuestions(roleId);
     }
   }, [roleId]);
+
+  useEffect(() => {
+    if (targetQuestionId && questions.length > 0) {
+      const index = questions.findIndex((q) => q.id === targetQuestionId);
+      if (index !== -1) {
+        const page = Math.floor(index / questionsPerPage) + 1;
+        setCurrentPage(page);
+        setHighlightedId(targetQuestionId);
+      }
+    }
+  }, [targetQuestionId, questions]);
+
+  useEffect(() => {
+    if (highlightedId) {
+      const timer = setTimeout(() => setHighlightedId(null), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedId]);
 
   const fetchQuestions = async (selectedRole) => {
     try {
@@ -131,8 +152,9 @@ function QuestionsPage() {
               borderRadius: '8px',
               padding: '15px',
               marginBottom: '15px',
-              backgroundColor: '#f9f9f9',
+              backgroundColor: q.id === highlightedId ? 'lightgreen' : 'white',
               color: '#212121',
+              transition: 'background-color 0.5s ease',
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -222,7 +244,6 @@ function QuestionsPage() {
         <span style={{ color: '#ffffff', fontWeight: 'bold', fontSize: '16px' }}>
           Page {currentPage} of {totalPages}
         </span>
-
         <button onClick={goToNext} disabled={currentPage === totalPages}>
           Next
         </button>

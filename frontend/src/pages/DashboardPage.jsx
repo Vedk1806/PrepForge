@@ -1,5 +1,3 @@
-// DashboardPage.jsx — with hover highlight and improved text contrast
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
@@ -22,7 +20,8 @@ function DashboardPage() {
         const withText = userProgress.map((p) => ({
           ...p,
           questionText: p.question.text,
-          role: p.question.role?.id
+          role: p.question.role?.id,
+          questionId: p.question.id
         }));
 
         setBookmarked(withText.filter((item) => item.status === 'Bookmarked'));
@@ -35,8 +34,8 @@ function DashboardPage() {
     fetchProgress();
   }, [userId]);
 
-  const goToQuestion = (roleId) => {
-    navigate(`/questions/${roleId}`);
+  const goToQuestion = (roleId, questionId) => {
+    navigate(`/questions/${roleId}`, { state: { targetQuestionId: questionId } });
   };
 
   const renderList = (items, title) => (
@@ -49,7 +48,7 @@ function DashboardPage() {
           {items.map((item) => (
             <li
               key={item.id}
-              onClick={() => goToQuestion(item.role)}
+              onClick={() => goToQuestion(item.role, item.questionId)}
               style={{
                 padding: '10px',
                 marginBottom: '10px',
@@ -72,7 +71,7 @@ function DashboardPage() {
 
   return (
     <div style={{ padding: '40px', maxWidth: '900px', margin: '0 auto' }}>
-      <h1 style={{ color: 'LightGreen' }}>Your Dashboard</h1>
+      <h1 style={{ color: 'lightgreen' }}>Your Dashboard</h1>
       {renderList(bookmarked, 'Bookmarked')}
       {renderList(completed, 'Completed')}
     </div>
