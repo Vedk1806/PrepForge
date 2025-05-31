@@ -1,4 +1,10 @@
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -14,7 +20,6 @@ SECRET_KEY = "django-insecure-61sx^m(3@rxmaoco!a*f+-b8$f4*qqx7&82h)j^1+n%j&_0&gn
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 

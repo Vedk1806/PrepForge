@@ -1,8 +1,8 @@
-// QuestionsPage.jsx — supports jumping to a specific question and optional highlight
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import API from '../services/api';
+import ReactMarkdown from 'react-markdown';
+
 
 function QuestionsPage() {
   const { roleId } = useParams();
@@ -12,6 +12,9 @@ function QuestionsPage() {
   const [questions, setQuestions] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [highlightedId, setHighlightedId] = useState(null);
+  const [aiAnswers, setAiAnswers] = useState({});
+  const [aiVisible, setAiVisible] = useState({});
+  const [loadingId, setLoadingId] = useState(null);
 
   const questionsPerPage = 3;
   const indexOfLast = currentPage * questionsPerPage;
@@ -54,6 +57,11 @@ function QuestionsPage() {
   const fetchQuestions = async (selectedRole) => {
     try {
       const userId = localStorage.getItem('user_id');
+      const token = localStorage.getItem('accessToken');
+    if (!token || !userId) {
+      console.warn('No token or userId available yet.');
+      return;
+    }
       const response = await API.get(`questions/${selectedRole}/?user=${userId}`);
       const notesRes = await API.get('notes/');
       const questionsData = response.data;
@@ -126,6 +134,24 @@ function QuestionsPage() {
       console.error('Error updating progress:', error);
       alert('Failed to update progress.');
     }
+  };
+
+  const handleAskAI = async (questionId, questionText) => {
+    setLoadingId(questionId);
+    try {
+      const res = await API.post('ask-ai/', { question_text: questionText });
+      setAiAnswers(prev => ({ ...prev, [questionId]: res.data.answer }));
+      setAiVisible(prev => ({ ...prev, [questionId]: true }));
+    } catch (err) {
+      console.error('AI request failed:', err);
+      setAiAnswers(prev => ({ ...prev, [questionId]: 'Failed to fetch AI response.' }));
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  const toggleAiVisibility = (questionId) => {
+    setAiVisible(prev => ({ ...prev, [questionId]: !prev[questionId] }));
   };
 
   return (
@@ -232,7 +258,54 @@ function QuestionsPage() {
               >
                 Save Note
               </button>
+
+              <button
+                onClick={() => handleAskAI(q.id, q.text)}
+                style={{
+                  padding: '5px 10px',
+                  backgroundColor: '#ff9800',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  marginLeft: '10px',
+                  cursor: 'pointer'
+                }}
+              >
+                {loadingId === q.id ? 'Thinking...' : 'Ask AI'}
+              </button>
+
+              {aiAnswers[q.id] && (
+                <button
+                  onClick={() => toggleAiVisibility(q.id)}
+                  style={{
+                    marginLeft: '10px',
+                    backgroundColor: '#888',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '5px 10px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {aiVisible[q.id] ? 'Hide AI Answer' : 'Show AI Answer'}
+                </button>
+              )}
             </div>
+
+            {aiAnswers[q.id] && aiVisible[q.id] && (
+              <div style={{
+                marginTop: '15px',
+                backgroundColor: '#f4f4f4',
+                padding: '12px',
+                borderRadius: '6px',
+                border: '1px solid #ccc',
+                color: '#333',
+                whiteSpace: 'pre-wrap'
+              }}>
+                <strong>AI says:</strong>
+                <ReactMarkdown>{aiAnswers[q.id]}</ReactMarkdown>
+              </div>
+            )}
           </li>
         ))}
       </ul>

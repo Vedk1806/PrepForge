@@ -1,3 +1,7 @@
+import google.generativeai as genai
+from rest_framework.decorators import api_view, permission_classes
+from django.conf import settings
+
 from rest_framework import generics, permissions
 from .models import Role, Question, UserProgress, UserNote
 from .serializers import RoleSerializer, QuestionSerializer, UserProgressSerializer, UserNoteSerializer
@@ -140,3 +144,26 @@ def register_user(request):
     user.save()
 
     return Response({'message': 'User registered successfully!'}, status=status.HTTP_201_CREATED)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def ask_ai(request):
+    question_text = request.data.get('question_text')
+    if not question_text:
+        return Response({'error': 'No question_text provided'}, status=400)
+
+    try:
+        # Force correct version and path
+        genai.configure(
+            api_key=settings.GEMINI_API_KEY,
+            transport="rest"
+        )
+
+        # Force model ID that matches REST v1 version
+        model = genai.GenerativeModel(model_name='models/gemini-1.5-flash')
+
+        response = model.generate_content(question_text)
+
+        return Response({'answer': response.text})
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
