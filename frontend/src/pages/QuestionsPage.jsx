@@ -3,7 +3,6 @@ import { useParams, useLocation } from 'react-router-dom';
 import API from '../services/api';
 import ReactMarkdown from 'react-markdown';
 
-
 function QuestionsPage() {
   const { roleId } = useParams();
   const location = useLocation();
@@ -12,9 +11,9 @@ function QuestionsPage() {
   const [questions, setQuestions] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [highlightedId, setHighlightedId] = useState(null);
-  const [aiAnswers, setAiAnswers] = useState({});
-  const [aiVisible, setAiVisible] = useState({});
-  const [loadingId, setLoadingId] = useState(null);
+  const [aiInput, setAiInput] = useState('');
+  const [aiResponse, setAiResponse] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const questionsPerPage = 3;
   const indexOfLast = currentPage * questionsPerPage;
@@ -58,10 +57,10 @@ function QuestionsPage() {
     try {
       const userId = localStorage.getItem('user_id');
       const token = localStorage.getItem('accessToken');
-    if (!token || !userId) {
-      console.warn('No token or userId available yet.');
-      return;
-    }
+      if (!token || !userId) {
+        console.warn('No token or userId available yet.');
+        return;
+      }
       const response = await API.get(`questions/${selectedRole}/?user=${userId}`);
       const notesRes = await API.get('notes/');
       const questionsData = response.data;
@@ -136,22 +135,18 @@ function QuestionsPage() {
     }
   };
 
-  const handleAskAI = async (questionId, questionText) => {
-    setLoadingId(questionId);
+  const handleGlobalAskAI = async () => {
+    if (!aiInput.trim()) return;
+    setLoading(true);
     try {
-      const res = await API.post('ask-ai/', { question_text: questionText });
-      setAiAnswers(prev => ({ ...prev, [questionId]: res.data.answer }));
-      setAiVisible(prev => ({ ...prev, [questionId]: true }));
+      const res = await API.post('ask-ai/', { question_text: aiInput });
+      setAiResponse(res.data.answer);
     } catch (err) {
       console.error('AI request failed:', err);
-      setAiAnswers(prev => ({ ...prev, [questionId]: 'Failed to fetch AI response.' }));
+      setAiResponse('Failed to fetch AI response.');
     } finally {
-      setLoadingId(null);
+      setLoading(false);
     }
-  };
-
-  const toggleAiVisibility = (questionId) => {
-    setAiVisible(prev => ({ ...prev, [questionId]: !prev[questionId] }));
   };
 
   return (
@@ -165,9 +160,32 @@ function QuestionsPage() {
         maxWidth: '900px',
         margin: '0 auto',
         width: '100%',
+        position: 'relative'
       }}
     >
       <h1>Available Questions</h1>
+
+      <div style={{
+        position: 'absolute', top: 140, right: -300, width: '280px', backgroundColor: 'lightyellow', padding: '16px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+        <h3 style={{color:'#6c63ff'}}>Ask AI</h3>
+        <textarea
+          placeholder="Ask AI anything..."
+          value={aiInput}
+          onChange={(e) => setAiInput(e.target.value)}
+          style={{ width: '100%', padding: '8px', height: '120px' }}
+        />
+        <button
+          onClick={handleGlobalAskAI}
+          style={{ marginTop: '10px', width: '100%', padding: '8px', backgroundColor: '#6c63ff', color: 'white', border: 'none', borderRadius: '4px' }}
+        >
+          {loading ? 'Thinking...' : 'Ask'}
+        </button>
+        {aiResponse && (
+          <div style={{ marginTop: '15px', backgroundColor: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ccc', color: '#333', maxHeight: '300px', overflowY: 'auto' }}>
+            <ReactMarkdown>{aiResponse}</ReactMarkdown>
+          </div>
+        )}
+      </div>
 
       <ul style={{ listStyle: 'none', padding: 0, width: '100%' }}>
         {currentQuestions.map((q) => (
@@ -258,54 +276,7 @@ function QuestionsPage() {
               >
                 Save Note
               </button>
-
-              <button
-                onClick={() => handleAskAI(q.id, q.text)}
-                style={{
-                  padding: '5px 10px',
-                  backgroundColor: '#ff9800',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  marginLeft: '10px',
-                  cursor: 'pointer'
-                }}
-              >
-                {loadingId === q.id ? 'Thinking...' : 'Ask AI'}
-              </button>
-
-              {aiAnswers[q.id] && (
-                <button
-                  onClick={() => toggleAiVisibility(q.id)}
-                  style={{
-                    marginLeft: '10px',
-                    backgroundColor: '#888',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    padding: '5px 10px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {aiVisible[q.id] ? 'Hide AI Answer' : 'Show AI Answer'}
-                </button>
-              )}
             </div>
-
-            {aiAnswers[q.id] && aiVisible[q.id] && (
-              <div style={{
-                marginTop: '15px',
-                backgroundColor: '#f4f4f4',
-                padding: '12px',
-                borderRadius: '6px',
-                border: '1px solid #ccc',
-                color: '#333',
-                whiteSpace: 'pre-wrap'
-              }}>
-                <strong>AI says:</strong>
-                <ReactMarkdown>{aiAnswers[q.id]}</ReactMarkdown>
-              </div>
-            )}
           </li>
         ))}
       </ul>
