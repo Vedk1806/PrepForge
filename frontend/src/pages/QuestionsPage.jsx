@@ -14,6 +14,13 @@ function QuestionsPage() {
   const [aiInput, setAiInput] = useState('');
   const [aiResponse, setAiResponse] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const questionsPerPage = 3;
   const indexOfLast = currentPage * questionsPerPage;
@@ -150,147 +157,160 @@ function QuestionsPage() {
   };
 
   return (
-    <div
-      style={{
-        flexGrow: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        padding: '20px',
-        maxWidth: '900px',
-        margin: '0 auto',
-        width: '100%',
-        position: 'relative'
-      }}
-    >
-      <h1>Available Questions</h1>
+    <div style={{ padding: '20px' }}>
+      <h1 style={{ textAlign: 'center' }}>Available Questions</h1>
 
       <div style={{
-        position: 'absolute', top: 140, right: -300, width: '280px', backgroundColor: 'lightyellow', padding: '16px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
-        <h3 style={{color:'#6c63ff'}}>Ask AI</h3>
-        <textarea
-          placeholder="Ask AI anything..."
-          value={aiInput}
-          onChange={(e) => setAiInput(e.target.value)}
-          style={{ width: '100%', padding: '8px', height: '120px' }}
-        />
-        <button
-          onClick={handleGlobalAskAI}
-          style={{ marginTop: '10px', width: '100%', padding: '8px', backgroundColor: '#6c63ff', color: 'white', border: 'none', borderRadius: '4px' }}
-        >
-          {loading ? 'Thinking...' : 'Ask'}
-        </button>
-        {aiResponse && (
-          <div style={{ marginTop: '15px', backgroundColor: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ccc', color: '#333', maxHeight: '300px', overflowY: 'auto' }}>
-            <ReactMarkdown>{aiResponse}</ReactMarkdown>
+        display: isMobile ? 'block' : 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        justifyContent: 'center',
+        alignItems: 'flex-start'
+      }}>
+
+        {/* Left side: Questions */}
+        <div style={{
+          width: '100%',
+          maxWidth: isMobile ? '100%' : '900px',
+          paddingLeft: isMobile ? '0' : '450px',
+          margin: isMobile ? '0 auto' : '0'
+        }}>
+
+          <ul style={{ listStyle: 'none', padding: 0, width: '100%' }}>
+            {currentQuestions.map((q) => (
+              <li
+                key={q.id}
+                style={{
+                  border: '1px solid #ddd',
+                  borderRadius: '8px',
+                  padding: '15px',
+                  marginBottom: '15px',
+                  backgroundColor: q.id === highlightedId ? 'lightgreen' : 'white',
+                  color: '#212121',
+                  transition: 'background-color 0.5s ease',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <strong>{q.text}</strong>
+                  {q.status && (
+                    <span
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: '20px',
+                        backgroundColor: q.status === 'Completed' ? '#d4edda' : '#cce5ff',
+                        color: q.status === 'Completed' ? '#155724' : '#004085',
+                        fontSize: '12px',
+                      }}
+                    >
+                      {q.status}
+                    </span>
+                  )}
+                </div>
+
+                <div style={{ marginTop: '10px' }}>
+                  <button
+                    onClick={() => handleProgressUpdate(q.id, 'Bookmarked')}
+                    disabled={q.status === 'Bookmarked'}
+                    style={{
+                      padding: '5px 10px',
+                      marginRight: '10px',
+                      backgroundColor: q.status === 'Bookmarked' ? '#ccc' : '#007bff',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: q.status === 'Bookmarked' ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    Bookmark
+                  </button>
+
+                  <button
+                    onClick={() => handleProgressUpdate(q.id, 'Completed')}
+                    disabled={q.status === 'Completed'}
+                    style={{
+                      padding: '5px 10px',
+                      backgroundColor: q.status === 'Completed' ? '#ccc' : '#28a745',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: q.status === 'Completed' ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    Mark Completed
+                  </button>
+                </div>
+
+                <div style={{ marginTop: '10px' }}>
+                  <textarea
+                    placeholder="Write your notes here..."
+                    value={q.note || ''}
+                    onChange={(e) =>
+                      setQuestions((prev) =>
+                        prev.map((item) =>
+                          item.id === q.id ? { ...item, note: e.target.value } : item
+                        )
+                      )
+                    }
+                    style={{ width: '100%', padding: '8px', marginBottom: '8px' }}
+                  />
+                  <button
+                    onClick={() => handleSaveNote(q.id, q.note)}
+                    style={{
+                      padding: '5px 10px',
+                      backgroundColor: '#6c63ff',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                    }}
+                  >
+                    Save Note
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '20px' }}>
+            <button onClick={goToPrevious} disabled={currentPage === 1}>
+              Previous
+            </button>
+            <span style={{ color: '#ffffff', fontWeight: 'bold', fontSize: '16px' }}>
+              Page {currentPage} of {totalPages}
+            </span>
+            <button onClick={goToNext} disabled={currentPage === totalPages}>
+              Next
+            </button>
           </div>
-        )}
-      </div>
+        </div>
 
-      <ul style={{ listStyle: 'none', padding: 0, width: '100%' }}>
-        {currentQuestions.map((q) => (
-          <li
-            key={q.id}
-            style={{
-              border: '1px solid #ddd',
-              borderRadius: '8px',
-              padding: '15px',
-              marginBottom: '15px',
-              backgroundColor: q.id === highlightedId ? 'lightgreen' : 'white',
-              color: '#212121',
-              transition: 'background-color 0.5s ease',
-            }}
+        {/* Right side or bottom: Ask AI */}
+        <div style={{
+          width: isMobile ? '100%' : '300px',
+          marginTop: isMobile ? '30px' : '12px',
+          marginLeft: isMobile ? '0' : '40px',
+          backgroundColor: 'lightyellow',
+          padding: '16px',
+          borderRadius: '8px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+        }}>
+          <h3 style={{ color: '#6c63ff' }}>Ask AI</h3>
+          <textarea
+            placeholder="Ask AI anything..."
+            value={aiInput}
+            onChange={(e) => setAiInput(e.target.value)}
+            style={{ width: '100%', padding: '8px', height: '120px' }}
+          />
+          <button
+            onClick={handleGlobalAskAI}
+            style={{ marginTop: '10px', width: '100%', padding: '8px', backgroundColor: '#6c63ff', color: 'white', border: 'none', borderRadius: '4px' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <strong>{q.text}</strong>
-              {q.status && (
-                <span
-                  style={{
-                    padding: '4px 10px',
-                    borderRadius: '20px',
-                    backgroundColor: q.status === 'Completed' ? '#d4edda' : '#cce5ff',
-                    color: q.status === 'Completed' ? '#155724' : '#004085',
-                    fontSize: '12px',
-                  }}
-                >
-                  {q.status}
-                </span>
-              )}
+            {loading ? 'Thinking...' : 'Ask'}
+          </button>
+          {aiResponse && (
+            <div style={{ marginTop: '15px', backgroundColor: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ccc', color: '#333', maxHeight: '300px', overflowY: 'auto' }}>
+              <ReactMarkdown>{aiResponse}</ReactMarkdown>
             </div>
-
-            <div style={{ marginTop: '10px' }}>
-              <button
-                onClick={() => handleProgressUpdate(q.id, 'Bookmarked')}
-                disabled={q.status === 'Bookmarked'}
-                style={{
-                  padding: '5px 10px',
-                  marginRight: '10px',
-                  backgroundColor: q.status === 'Bookmarked' ? '#ccc' : '#007bff',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: q.status === 'Bookmarked' ? 'not-allowed' : 'pointer',
-                }}
-              >
-                Bookmark
-              </button>
-
-              <button
-                onClick={() => handleProgressUpdate(q.id, 'Completed')}
-                disabled={q.status === 'Completed'}
-                style={{
-                  padding: '5px 10px',
-                  backgroundColor: q.status === 'Completed' ? '#ccc' : '#28a745',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: q.status === 'Completed' ? 'not-allowed' : 'pointer',
-                }}
-              >
-                Mark Completed
-              </button>
-            </div>
-
-            <div style={{ marginTop: '10px' }}>
-              <textarea
-                placeholder="Write your notes here..."
-                value={q.note || ''}
-                onChange={(e) =>
-                  setQuestions((prev) =>
-                    prev.map((item) =>
-                      item.id === q.id ? { ...item, note: e.target.value } : item
-                    )
-                  )
-                }
-                style={{ width: '100%', padding: '8px', marginBottom: '8px' }}
-              />
-              <button
-                onClick={() => handleSaveNote(q.id, q.note)}
-                style={{
-                  padding: '5px 10px',
-                  backgroundColor: '#6c63ff',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                }}
-              >
-                Save Note
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '20px' }}>
-        <button onClick={goToPrevious} disabled={currentPage === 1}>
-          Previous
-        </button>
-        <span style={{ color: '#ffffff', fontWeight: 'bold', fontSize: '16px' }}>
-          Page {currentPage} of {totalPages}
-        </span>
-        <button onClick={goToNext} disabled={currentPage === totalPages}>
-          Next
-        </button>
+          )}
+        </div>
       </div>
     </div>
   );
