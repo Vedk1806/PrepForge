@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import API from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { FaUser, FaEnvelope, FaLock } from 'react-icons/fa';
 
 function SignupPage() {
   const [formData, setFormData] = useState({
@@ -33,7 +35,7 @@ function SignupPage() {
       const response = await API.post('register/', formData);
       console.log('Signup successful:', response.data);
       alert('Signup successful! 🎉 You can now login.');
-      navigate('/login');  // Redirect to Login Page
+      navigate('/login');
     } catch (err) {
       console.error('Signup failed:', err.response?.data || err.message);
       setError(err.response?.data?.error || 'Signup failed. Please try again.');
@@ -41,58 +43,64 @@ function SignupPage() {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: 'auto', padding: '20px' }}>
-      <h2>Signup</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="username"
-          placeholder="Username"
-          value={formData.username}
-          onChange={handleChange}
-          required
-          style={{ display: 'block', marginBottom: '10px', width: '100%', padding: '8px' }}
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-          style={{ display: 'block', marginBottom: '10px', width: '100%', padding: '8px' }}
-        />
-        <input
-          type="password"
-          name="password1"
-          placeholder="Password"
-          value={formData.password1}
-          onChange={handleChange}
-          required
-          style={{ display: 'block', marginBottom: '10px', width: '100%', padding: '8px' }}
-        />
-        <input
-          type="password"
-          name="password2"
-          placeholder="Confirm Password"
-          value={formData.password2}
-          onChange={handleChange}
-          required
-          style={{ display: 'block', marginBottom: '20px', width: '100%', padding: '8px' }}
-        />
-        <button type="submit" style={{
-          width: '100%',
-          padding: '10px',
-          backgroundColor: '#007bff',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer'
-        }}>
-          Signup
-        </button>
-      </form>
+    <div className="container mt-5" style={{ maxWidth: '500px' }}>
+      <div className="card shadow p-4">
+        <h3 className="text-center mb-4 text-primary">Create Your Account</h3>
+        {error && <div className="alert alert-danger">{error}</div>}
+        <form onSubmit={handleSubmit}>
+          <div className="form-group mb-3">
+            <label><FaUser className="me-2" />Username</label>
+            <input
+              type="text"
+              name="username"
+              className="form-control"
+              placeholder="Enter username"
+              value={formData.username}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="form-group mb-3">
+            <label><FaEnvelope className="me-2" />Email</label>
+            <input
+              type="email"
+              name="email"
+              className="form-control"
+              placeholder="Enter email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="form-group mb-3">
+            <label><FaLock className="me-2" />Password</label>
+            <input
+              type="password"
+              name="password1"
+              className="form-control"
+              placeholder="Enter password"
+              value={formData.password1}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="form-group mb-4">
+            <label><FaLock className="me-2" />Confirm Password</label>
+            <input
+              type="password"
+              name="password2"
+              className="form-control"
+              placeholder="Confirm password"
+              value={formData.password2}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <button type="submit" className="btn btn-primary w-100">
+            Sign Up
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

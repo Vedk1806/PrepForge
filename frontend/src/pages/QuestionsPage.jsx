@@ -101,34 +101,72 @@ function QuestionsPage() {
     }
   };
 
+  // const handleProgressUpdate = async (questionId, status) => {
+  //   try {
+  //     const accessToken = localStorage.getItem('accessToken');
+  //     const progressRes = await API.get('progress/', {
+  //       headers: { Authorization: `Bearer ${accessToken}` },
+  //     });
+  //     const existing = progressRes.data.find((p) => p.question.id === questionId);
+  //     if (existing) {
+  //       const patchRes = await API.patch(`progress/${existing.id}/`, { status }, {
+  //         headers: { Authorization: `Bearer ${accessToken}` },
+  //       });
+  //       setQuestions((prev) =>
+  //         prev.map((q) => (q.id === questionId ? { ...q, status: patchRes.data.status } : q))
+  //       );
+  //     } else {
+  //       const postRes = await API.post('progress/', { question: questionId, status }, {
+  //         headers: { Authorization: `Bearer ${accessToken}` },
+  //       });
+  //       setQuestions((prev) =>
+  //         prev.map((q) => (q.id === questionId ? { ...q, status: postRes.data.status } : q))
+  //       );
+  //     }
+  //     alert(`Progress updated to ${status}`);
+  //   } catch (error) {
+  //     console.error('Error updating progress:', error);
+  //     alert('Failed to update progress.');
+  //   }
+  // };
+
   const handleProgressUpdate = async (questionId, status) => {
     try {
       const accessToken = localStorage.getItem('accessToken');
       const progressRes = await API.get('progress/', {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
+  
       const existing = progressRes.data.find((p) => p.question.id === questionId);
+  
       if (existing) {
-        const patchRes = await API.patch(`progress/${existing.id}/`, { status }, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        setQuestions((prev) =>
-          prev.map((q) => (q.id === questionId ? { ...q, status: patchRes.data.status } : q))
+        await API.patch(
+          `progress/${existing.id}/`,
+          { status },
+          { headers: { Authorization: `Bearer ${accessToken}` } }
         );
       } else {
-        const postRes = await API.post('progress/', { question: questionId, status }, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        setQuestions((prev) =>
-          prev.map((q) => (q.id === questionId ? { ...q, status: postRes.data.status } : q))
+        await API.post(
+          'progress/',
+          { question: questionId, status },
+          { headers: { Authorization: `Bearer ${accessToken}` } }
         );
       }
+  
+      // 🔥 Optimistic UI Update — update the local state immediately
+      setQuestions((prev) =>
+        prev.map((q) =>
+          q.id === questionId ? { ...q, status } : q
+        )
+      );
+  
       alert(`Progress updated to ${status}`);
     } catch (error) {
       console.error('Error updating progress:', error);
       alert('Failed to update progress.');
     }
   };
+  
 
   const handleGlobalAskAI = async () => {
     if (!aiInput.trim()) return;
