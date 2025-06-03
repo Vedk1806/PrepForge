@@ -2,6 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import API from '../services/api';
 import ReactMarkdown from 'react-markdown';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { FaLightbulb } from "react-icons/fa";
+import './QuestionsPage.css';
+
+
 
 function QuestionsPage() {
   const { roleId } = useParams();
@@ -64,23 +69,15 @@ function QuestionsPage() {
     try {
       const userId = localStorage.getItem('user_id');
       const token = localStorage.getItem('accessToken');
-      if (!token || !userId) {
-        console.warn('No token or userId available yet.');
-        return;
-      }
+      if (!token || !userId) return;
       const response = await API.get(`questions/${selectedRole}/?user=${userId}`);
       const notesRes = await API.get('notes/');
       const questionsData = response.data;
       const notes = notesRes.data;
-
       const questionsWithExtras = questionsData.map((q) => {
         const noteObj = notes.find((n) => n.question === q.id);
-        return {
-          ...q,
-          note: noteObj?.note || '',
-        };
+        return { ...q, note: noteObj?.note || '' };
       });
-
       setQuestions(questionsWithExtras);
     } catch (error) {
       console.error('Error fetching questions:', error);
@@ -95,10 +92,7 @@ function QuestionsPage() {
         await API.patch(`notes/${noteId}/`, { note: noteContent });
         alert('Note updated successfully!');
       } else {
-        await API.post('notes/', {
-          question: questionId,
-          note: noteContent,
-        });
+        await API.post('notes/', { question: questionId, note: noteContent });
         alert('Note saved successfully!');
       }
     } catch (error) {
@@ -113,24 +107,18 @@ function QuestionsPage() {
       const progressRes = await API.get('progress/', {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-
       const existing = progressRes.data.find((p) => p.question.id === questionId);
-
       if (existing) {
-        const patchRes = await API.patch(
-          `progress/${existing.id}/`,
-          { status },
-          { headers: { Authorization: `Bearer ${accessToken}` } }
-        );
+        const patchRes = await API.patch(`progress/${existing.id}/`, { status }, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
         setQuestions((prev) =>
           prev.map((q) => (q.id === questionId ? { ...q, status: patchRes.data.status } : q))
         );
       } else {
-        const postRes = await API.post(
-          'progress/',
-          { question: questionId, status },
-          { headers: { Authorization: `Bearer ${accessToken}` } }
-        );
+        const postRes = await API.post('progress/', { question: questionId, status }, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
         setQuestions((prev) =>
           prev.map((q) => (q.id === questionId ? { ...q, status: postRes.data.status } : q))
         );
@@ -157,159 +145,58 @@ function QuestionsPage() {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1 style={{ textAlign: 'center' }}>Available Questions</h1>
-
-      <div style={{
-        display: isMobile ? 'block' : 'flex',
-        flexDirection: isMobile ? 'column' : 'row',
-        justifyContent: 'center',
-        alignItems: 'flex-start'
-      }}>
-
-        {/* Left side: Questions */}
-        <div style={{
-          width: '100%',
-          maxWidth: isMobile ? '100%' : '900px',
-          paddingLeft: isMobile ? '0' : '450px',
-          margin: isMobile ? '0 auto' : '0'
-        }}>
-
-          <ul style={{ listStyle: 'none', padding: 0, width: '100%' }}>
-            {currentQuestions.map((q) => (
-              <li
-                key={q.id}
-                style={{
-                  border: '1px solid #ddd',
-                  borderRadius: '8px',
-                  padding: '15px',
-                  marginBottom: '15px',
-                  backgroundColor: q.id === highlightedId ? 'lightgreen' : 'white',
-                  color: '#212121',
-                  transition: 'background-color 0.5s ease',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <strong>{q.text}</strong>
+    <div className="container py-4">
+      <h1 className="text-center text-light mb-4 display-5 fw-bold">Available Questions</h1>
+      <div className={`row ${isMobile ? '' : 'gx-5'}`}>
+        <div className={isMobile ? '' : 'col-lg-9'}>
+          {currentQuestions.map((q) => (
+            <div
+              key={q.id}
+              className={`card border-0 mb-4 shadow-lg rounded-4 ${q.id === highlightedId ? 'border-success border-2' : ''}`}
+              style={{ background: 'linear-gradient(to right, #f0f4ff, #e6f7ff)' }}
+            >
+              <div className="card-body">
+                <h5 className="card-title d-flex justify-content-between align-items-center">
+                  <span className="fw-semibold">{q.text}</span>
                   {q.status && (
-                    <span
-                      style={{
-                        padding: '4px 10px',
-                        borderRadius: '20px',
-                        backgroundColor: q.status === 'Completed' ? '#d4edda' : '#cce5ff',
-                        color: q.status === 'Completed' ? '#155724' : '#004085',
-                        fontSize: '12px',
-                      }}
-                    >
-                      {q.status}
-                    </span>
+                    <span className={`badge ${q.status === 'Completed' ? 'bg-success' : 'bg-primary'}`}>{q.status}</span>
                   )}
+                </h5>
+                <div className="mt-3">
+                  <button className="btn btn-outline-primary me-2" disabled={q.status === 'Bookmarked'} onClick={() => handleProgressUpdate(q.id, 'Bookmarked')}>Bookmark</button>
+                  <button className="btn btn-outline-success" disabled={q.status === 'Completed'} onClick={() => handleProgressUpdate(q.id, 'Completed')}>Mark Completed</button>
                 </div>
-
-                <div style={{ marginTop: '10px' }}>
-                  <button
-                    onClick={() => handleProgressUpdate(q.id, 'Bookmarked')}
-                    disabled={q.status === 'Bookmarked'}
-                    style={{
-                      padding: '5px 10px',
-                      marginRight: '10px',
-                      backgroundColor: q.status === 'Bookmarked' ? '#ccc' : '#007bff',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: q.status === 'Bookmarked' ? 'not-allowed' : 'pointer',
-                    }}
-                  >
-                    Bookmark
-                  </button>
-
-                  <button
-                    onClick={() => handleProgressUpdate(q.id, 'Completed')}
-                    disabled={q.status === 'Completed'}
-                    style={{
-                      padding: '5px 10px',
-                      backgroundColor: q.status === 'Completed' ? '#ccc' : '#28a745',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: q.status === 'Completed' ? 'not-allowed' : 'pointer',
-                    }}
-                  >
-                    Mark Completed
-                  </button>
+                <div className="mt-3">
+                  <textarea className="form-control" rows="3" placeholder="Write your notes here..." value={q.note || ''} onChange={(e) => setQuestions((prev) => prev.map((item) => item.id === q.id ? { ...item, note: e.target.value } : item))} />
+                  <button className="btn btn-dark mt-2" onClick={() => handleSaveNote(q.id, q.note)}>Save Note</button>
                 </div>
+              </div>
+            </div>
+          ))}
 
-                <div style={{ marginTop: '10px' }}>
-                  <textarea
-                    placeholder="Write your notes here..."
-                    value={q.note || ''}
-                    onChange={(e) =>
-                      setQuestions((prev) =>
-                        prev.map((item) =>
-                          item.id === q.id ? { ...item, note: e.target.value } : item
-                        )
-                      )
-                    }
-                    style={{ width: '100%', padding: '8px', marginBottom: '8px' }}
-                  />
-                  <button
-                    onClick={() => handleSaveNote(q.id, q.note)}
-                    style={{
-                      padding: '5px 10px',
-                      backgroundColor: '#6c63ff',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                    }}
-                  >
-                    Save Note
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '20px' }}>
-            <button onClick={goToPrevious} disabled={currentPage === 1}>
-              Previous
-            </button>
-            <span style={{ color: '#ffffff', fontWeight: 'bold', fontSize: '16px' }}>
-              Page {currentPage} of {totalPages}
-            </span>
-            <button onClick={goToNext} disabled={currentPage === totalPages}>
-              Next
-            </button>
+          <div className="d-flex justify-content-center align-items-center gap-3 mt-4">
+            <button className="btn btn-outline-secondary" onClick={goToPrevious} disabled={currentPage === 1}>Previous</button>
+            <span className="text-light fw-semibold">Page {currentPage} of {totalPages}</span>
+            <button className="btn btn-outline-secondary" onClick={goToNext} disabled={currentPage === totalPages}>Next</button>
           </div>
         </div>
 
-        {/* Right side or bottom: Ask AI */}
-        <div style={{
-          width: isMobile ? '100%' : '300px',
-          marginTop: isMobile ? '30px' : '12px',
-          marginLeft: isMobile ? '0' : '40px',
-          backgroundColor: 'lightyellow',
-          padding: '16px',
-          borderRadius: '8px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-        }}>
-          <h3 style={{ color: '#6c63ff' }}>Ask AI</h3>
-          <textarea
-            placeholder="Ask AI anything..."
-            value={aiInput}
-            onChange={(e) => setAiInput(e.target.value)}
-            style={{ width: '100%', padding: '8px', height: '120px' }}
-          />
-          <button
-            onClick={handleGlobalAskAI}
-            style={{ marginTop: '10px', width: '100%', padding: '8px', backgroundColor: '#6c63ff', color: 'white', border: 'none', borderRadius: '4px' }}
-          >
-            {loading ? 'Thinking...' : 'Ask'}
-          </button>
-          {aiResponse && (
-            <div style={{ marginTop: '15px', backgroundColor: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #ccc', color: '#333', maxHeight: '300px', overflowY: 'auto' }}>
-              <ReactMarkdown>{aiResponse}</ReactMarkdown>
-            </div>
-          )}
+       
+
+        <div className={isMobile ? 'mt-4' : 'col-lg-3'}>
+          <div className="bg-light p-4 rounded-4 shadow border border-primary">
+          <div style={{ textAlign: 'center', marginBottom: '-39px', paddingBottom:'10px' }}>
+          <FaLightbulb className="bouncing-bulb glow-bulb" size={32} color="orange" />
+          </div>
+            <h5 className="text-primary fw-semibold">Ask AI</h5>
+            <textarea className="form-control" placeholder="Ask AI anything..." value={aiInput} onChange={(e) => setAiInput(e.target.value)} rows="5" />
+            <button className="btn btn-primary w-100 mt-3" onClick={handleGlobalAskAI}>{loading ? 'Thinking...' : 'Ask'}</button>
+            {aiResponse && (
+              <div className="bg-white border mt-3 p-3 rounded-3 overflow-auto" style={{ maxHeight: '541px' }}>
+                <ReactMarkdown>{aiResponse}</ReactMarkdown>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

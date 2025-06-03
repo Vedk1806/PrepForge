@@ -1,0 +1,11 @@
+.dashboard-hover {
+  background-color: #212529;
+  color: #e0e0e0;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  cursor: pointer; /* 👈 Add this */
+}
+
+.dashboard-hover:hover {
+  background-color: #6c63ff;
+  color: white;
+}

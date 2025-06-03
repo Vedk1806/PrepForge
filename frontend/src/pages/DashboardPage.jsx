@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './DashboardPage.css';
 
 function DashboardPage() {
   const [bookmarked, setBookmarked] = useState([]);
@@ -12,7 +14,6 @@ function DashboardPage() {
     const fetchProgress = async () => {
       try {
         const progressRes = await API.get('progress/');
-
         const userProgress = progressRes.data.filter(
           (item) => (item.user?.id ?? item.user) === userId
         );
@@ -39,27 +40,17 @@ function DashboardPage() {
   };
 
   const renderList = (items, title) => (
-    <div style={{ marginBottom: '30px' }}>
-      <h2>{title}</h2>
+    <div className="mb-4">
+      <h3 className="text-primary fw-semibold mb-3">{title}</h3>
       {items.length === 0 ? (
-        <p>No questions {title.toLowerCase()} yet.</p>
+        <p className="text-muted">No questions {title.toLowerCase()} yet.</p>
       ) : (
-        <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
+        <ul className="list-group">
           {items.map((item) => (
             <li
               key={item.id}
               onClick={() => goToQuestion(item.role, item.questionId)}
-              style={{
-                padding: '10px',
-                marginBottom: '10px',
-                backgroundColor: '#2c2c2c',
-                color: '#e0e0e0',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                transition: 'background-color 0.2s ease',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#6c63ff')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#2c2c2c')}
+              className="list-group-item list-group-item-action dashboard-hover rounded mb-2"
             >
               {item.questionText}
             </li>
@@ -70,9 +61,17 @@ function DashboardPage() {
   );
 
   return (
-    <div style={{ padding: '40px', maxWidth: '900px', margin: '0 auto' }}>
-      <h1 style={{ color: 'lightgreen' }}>Your Dashboard</h1>
-      {renderList(bookmarked, 'Bookmarked')}
+    <div className="container py-5">
+    <h1 style={{
+      color: 'lightgreen',         // Match the app's purple theme
+      fontSize: '2.5rem',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      marginBottom: '30px',
+      textShadow: '1px 1px 4px rgba(0,0,0,0.4)'  // Optional glow
+    }}>
+  Your Dashboard
+</h1>      {renderList(bookmarked, 'Bookmarked')}
       {renderList(completed, 'Completed')}
     </div>
   );
