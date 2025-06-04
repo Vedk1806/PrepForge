@@ -195,7 +195,14 @@ function QuestionsPage() {
             >
               <div className="card-body">
                 <h5 className="card-title d-flex justify-content-between align-items-center">
-                  <span className="fw-semibold">{q.text}</span>
+                <span className="fw-semibold">
+                    {q.text}
+                    {q.difficulty && (
+                      <span className="badge bg-warning text-dark ms-2">
+                        {q.difficulty}
+                      </span>
+                    )}
+                  </span>   
                   {q.status && (
                     <span className={`badge ${q.status === 'Completed' ? 'bg-success' : 'bg-primary'}`}>{q.status}</span>
                   )}
