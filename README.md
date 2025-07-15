@@ -12,7 +12,7 @@
 
 **PrepForge** is a full-stack platform that helps job seekers master technical interviews.  
 ✅ Domain-specific questions  
-✅ Real-time AI explanations (Gemini API)  
+✅ Real-time AI explanations  
 ✅ Track bookmarks & completions  
 ✅ User dashboard  
 ✅ Secure JWT Auth  
@@ -97,8 +97,6 @@ npm run dev
 ✅ Frontend: npm run build → Upload /dist to S3
 
 ✅ Backend: EC2 + Gunicorn + Nginx
-
-✅ Domain & SSL: Route53 + Certbot
 
 
 ## 🤖 AI Integration
